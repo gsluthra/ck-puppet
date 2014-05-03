@@ -7,6 +7,22 @@ $ck_web_folder = "ck_web"
 $ck_web_owner  = "vagrant"
 $os_path       = "/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/vagrant/bin"
 
+### Firewall init 
+
+resources { "firewall":
+  purge => true
+}
+
+Firewall {
+  before  => Class['my_fw::post'],
+  require => Class['my_fw::pre'],
+}
+
+class { ['my_fw::pre', 'my_fw::post']: }
+
+class { 'firewall': }
+
+
 ### POSTGRES #######
 
 exec { "pgdg93":
@@ -39,12 +55,15 @@ apache::vhost { "localhost":
       docroot       => "/var/www/${ck_web_folder}",
       docroot_owner => "${ck_web_owner}",
       docroot_group => "${ck_web_owner}",
-}
--> 
+} -> 
 file { "/var/www/html/index.html":
 	ensure => present,
 	owner  => "${ck_web_owner}",
 	content => "<h1> Hello World. Welcome to Apache Web Server </h1>.",
+} ->
+firewall { '100 allow http and https access':
+    port   => [80, 443],
+    proto  => tcp,
+    action => accept,
 }
-
 
