@@ -4,20 +4,27 @@ $pg_user       = "ck_db"
 $pg_password   = "password"
 $pg_database   = "ck_db"
 $ck_web_folder = "ck_web"
-$ck_web_owner   = "vagrant"
+$ck_web_owner  = "vagrant"
+$os_path       = "/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/vagrant/bin"
 
 
+exec { "pgdg93":
+	 command  => "sudo yum --assumeyes localinstall http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm",
+	 path     => "${os_path}",
+	 creates  => "/etc/yum.repos.d/pgdg-93-centos.repo"
+} 
+->
 class {'postgresql::server': }
 ->
 user { "${pg_user}":
-  ensure     => "present",
+  ensure     => present,
   managehome => true,
 }
 ->
 postgresql::server::db { "${pg_database}":
   user     	=> "${pg_user}",
   password 	=> postgresql_password("${pg_user}","${pg_password}"),
-  grant 	=> "all"
+  grant 	=> all
 }
 
 
@@ -31,7 +38,7 @@ apache::vhost { "localhost":
 }
 -> 
 file { "/var/www/html/index.html":
-	ensure => "present",
+	ensure => present,
 	owner  => "${ck_web_owner}",
 	content => "<h1> Hello World. Welcome to Apache Web Server </h1>.",
 }
