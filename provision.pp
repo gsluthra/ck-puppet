@@ -7,26 +7,30 @@ $ck_web_folder = "ck_web"
 $ck_web_owner  = "vagrant"
 $os_path       = "/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/vagrant/bin"
 
+### POSTGRES #######
 
 exec { "pgdg93":
 	 command  => "sudo yum --assumeyes localinstall http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-centos93-9.3-1.noarch.rpm",
 	 path     => "${os_path}",
 	 creates  => "/etc/yum.repos.d/pgdg-93-centos.repo"
-} 
-->
-class {'postgresql::server': }
-->
+} ->
+class {'postgresql::server': 
+} ->
 user { "${pg_user}":
   ensure     => present,
   managehome => true,
-}
-->
+} ->
 postgresql::server::db { "${pg_database}":
   user     	=> "${pg_user}",
   password 	=> postgresql_password("${pg_user}","${pg_password}"),
   grant 	=> all
 }
 
+# Another way of sequencing the stuff.
+# Exec["pgdg93"] -> Class['postgresql::server'] -> User["${pg_user}"] -> Postgresql::Server::Db["${pg_database}"] 
+
+
+### APACHE HTTPD #######
 
 class {'apache': }
 ->

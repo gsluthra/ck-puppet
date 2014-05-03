@@ -23,4 +23,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider "virtualbox" do |v|
     v.customize ["modifyvm", :id, "--memory", 3092, "--cpus", 2, "--name", "Vagrant_CK"]
   end
+
+  
+  config.vm.provision "shell", path: "firstTimeSetupBox.sh"
+  
+  config.vm.provision "puppet" do |puppet|
+    puppet.manifests_path = ""
+    puppet.manifest_file = "provision.pp"
+  end
+
+  
 end
