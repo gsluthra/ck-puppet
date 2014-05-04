@@ -7,22 +7,6 @@ $ck_web_folder = "ck_web"
 $ck_web_owner  = "vagrant"
 $os_path       = "/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/vagrant/bin"
 
-### Firewall init 
-
-resources { "firewall":
-  purge => true
-}
-
-Firewall {
-  before  => Class['my_fw::post'],
-  require => Class['my_fw::pre'],
-}
-
-class { ['my_fw::pre', 'my_fw::post']: }
-
-class { 'firewall': }
-
-
 ### POSTGRES #######
 
 exec { "pgdg93":
@@ -57,13 +41,22 @@ apache::vhost { "localhost":
       docroot_group => "${ck_web_owner}",
 } -> 
 file { "/var/www/html/index.html":
-	ensure => present,
-	owner  => "${ck_web_owner}",
-	content => "<h1> Hello World. Welcome to Apache Web Server </h1>.",
-} ->
-firewall { '100 allow http and https access':
-    port   => [80, 443],
-    proto  => tcp,
-    action => accept,
+	ensure   => present,
+	owner    => "${ck_web_owner}",
+	content  => "<h1> Hello World. Welcome to Apache Web Server </h1>.",
+} 
+
+### FIRE WALL ##########
+ 
+exec { "open-port-80":
+	 command  => "sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 80 -j ACCEPT",
+	 path     => "${os_path}",
+	 unless   => "sudo iptables-save | grep 80 | grep INPUT | grep ACCEPT | grep NEW | wc -l | xargs test 1 -eq",
+	 notify   => Exec["ip-tables-save"]
 }
 
+exec { "ip-tables-save":
+	 command     => "sudo service iptables save",
+	 refreshonly => true,
+	 path        => "${os_path}",
+}

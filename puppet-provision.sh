@@ -1,4 +1,4 @@
 #!/bin/bash -x
 
 # Run provision puppet script
-sudo puppet apply provision.pp
+sudo puppet apply -v provision.pp
